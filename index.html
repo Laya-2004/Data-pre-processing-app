@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-rocket" aria-hidden="true"></i>
+        <span>Welcome to DataPrePro - Your Data Preprocessing Companion</span>
+    </div>
+    
+    <p>DataPrePro is a powerful web application designed to streamline your data preprocessing workflow for machine learning and data analysis projects. Our tool guides you through all essential preprocessing steps with an intuitive interface and powerful backend.</p>
+    
+    <div class="progress-container">
+        <div class="progress-bar" style="width: 0%"></div>
+    </div>
+    
+    <a href="{{ url_for('upload') }}" class="btn" aria-label="Upload your dataset">
+        <i class="fas fa-upload" aria-hidden="true"></i> Upload Your Dataset
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-list-ol" aria-hidden="true"></i>
+        <span>Data Preprocessing Steps</span>
+    </div>
+    
+    <div class="step-indicator">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-title">Inspection</div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-title">Cleaning</div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-title">Missing</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-title">Transform</div>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-title">Encoding</div>
+        </div>
+        <div class="step">
+            <div class="step-number">6</div>
+            <div class="step-title">Outliers</div>
+        </div>
+        <div class="step">
+            <div class="step-number">7</div>
+            <div class="step-title">Features</div>
+        </div>
+        <div class="step">
+            <div class="step-number">8</div>
+            <div class="step-title">Dim. Red.</div>
+        </div>
+        <div class="step">
+            <div class="step-number">9</div>
+            <div class="step-title">Types</div>
+        </div>
+        <div class="step">
+            <div class="step-number">10</div>
+            <div class="step-title">Validate</div>
+        </div>
+        <div class="step">
+            <div class="step-number">11</div>
+            <div class="step-title">Export</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-cogs" aria-hidden="true"></i>
+        <span>Detailed Step Descriptions</span>
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-search" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">1. Data Inspection</div>
+            <div class="feature-description">
+                Understand your dataset structure, data types, and identify initial issues.
+                <ul class="feature-list">
+                    <li>View dataset structure</li>
+                    <li>Check data types</li>
+                    <li>Identify missing values</li>
+                    <li>Generate summary statistics</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-broom" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">2. Data Cleaning</div>
+            <div class="feature-description">
+                Fix errors and remove noise from your data.
+                <ul class="feature-list">
+                    <li>Remove duplicates</li>
+                    <li>Trim whitespace</li>
+                    <li>Fix inconsistent casing</li>
+                    <li>Correct data types</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-question-circle" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">3. Missing Values</div>
+            <div class="feature-description">
+                Handle missing data appropriately.
+                <ul class="feature-list">
+                    <li>Mean/Median/Mode imputation</li>
+                    <li>KNN imputation</li>
+                    <li>Drop missing values</li>
+                    <li>Forward/Backward fill</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">4. Data Transformation</div>
+            <div class="feature-description">
+                Transform data for better model performance.
+                <ul class="feature-list">
+                    <li>Normalization</li>
+                    <li>Standardization</li>
+                    <li>Log transformation</li>
+                    <li>Box-Cox transformation</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-code" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">5. Categorical Encoding</div>
+            <div class="feature-description">
+                Convert categorical data to numerical.
+                <ul class="feature-list">
+                    <li>Label Encoding</li>
+                    <li>One-Hot Encoding</li>
+                    <li>Ordinal Encoding</li>
+                    <li>Binary Encoding</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">6. Outlier Handling</div>
+            <div class="feature-description">
+                Detect and handle anomalous data points.
+                <ul class="feature-list">
+                    <li>IQR method</li>
+                    <li>Z-score method</li>
+                    <li>Isolation Forest</li>
+                    <li>Capping/Winsorizing</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-cube" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">7. Feature Engineering</div>
+            <div class="feature-description">
+                Create new features from existing ones.
+                <ul class="feature-list">
+                    <li>Extract datetime features</li>
+                    <li>Combine features</li>
+                    <li>Create bins/buckets</li>
+                    <li>Text feature extraction</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-compress-alt" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">8. Dimensionality Reduction</div>
+            <div class="feature-description">
+                Reduce number of features while preserving information.
+                <ul class="feature-list">
+                    <li>PCA</li>
+                    <li>t-SNE</li>
+                    <li>Feature selection</li>
+                    <li>Feature importance</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-random" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">9. Data Type Conversion</div>
+            <div class="feature-description">
+                Ensure correct data types for all features.
+                <ul class="feature-list">
+                    <li>String to datetime</li>
+                    <li>Float to integer</li>
+                    <li>Object to category</li>
+                    <li>Boolean conversion</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">10. Final Validation</div>
+            <div class="feature-description">
+                Verify data consistency before export.
+                <ul class="feature-list">
+                    <li>Check for remaining nulls</li>
+                    <li>Verify data types</li>
+                    <li>Confirm value ranges</li>
+                    <li>Validate categories</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-file-export" aria-hidden="true"></i>
+            </div>
+            <div class="feature-title">11. Export Data</div>
+            <div class="feature-description">
+                Save your processed dataset for modeling.
+                <ul class="feature-list">
+                    <li>CSV format</li>
+                    <li>Excel format</li>
+                    <li>JSON format</li>
+                    <li>Database export</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="{{ url_for('upload') }}" class="btn btn-success" aria-label="Start preprocessing now">
+            <i class="fas fa-play" aria-hidden="true"></i> Start Preprocessing Now
+        </a>
+    </div>
+</div>
+
+<style>
+    .feature-list {
+        text-align: left;
+        margin-top: 10px;
+        padding-left: 20px;
+        list-style-type: disc;
+    }
+    
+    .feature-list li {
+        margin-bottom: 5px;
+        font-size: 13px;
+    }
+</style>
+{% endblock %}

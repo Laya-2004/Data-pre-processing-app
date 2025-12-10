@@ -1,0 +1,738 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-project-diagram" aria-hidden="true"></i>
+        <span>Data Preprocessing Workflow</span>
+    </div>
+    
+    <div class="progress-container">
+        <div class="progress-bar" style="width: {{ (current_step / total_steps) * 100 }}%"></div>
+    </div>
+    
+    <div class="step-indicator">
+        {% for step_num in range(1, total_steps + 1) %}
+            <div class="step {% if step_num < current_step %}completed{% elif step_num == current_step %}active{% endif %}">
+                <div class="step-number">{{ step_num }}</div>
+                <div class="step-title">
+                    {% if step_num == 1 %}Inspection{% endif %}
+                    {% if step_num == 2 %}Cleaning{% endif %}
+                    {% if step_num == 3 %}Missing{% endif %}
+                    {% if step_num == 4 %}Transform{% endif %}
+                    {% if step_num == 5 %}Encoding{% endif %}
+                    {% if step_num == 6 %}Outliers{% endif %}
+                    {% if step_num == 7 %}Features{% endif %}
+                    {% if step_num == 8 %}Dim. Red.{% endif %}
+                    {% if step_num == 9 %}Types{% endif %}
+                    {% if step_num == 10 %}Validate{% endif %}
+                    {% if step_num == 11 %}Export{% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-table" aria-hidden="true"></i>
+        <span>Dataset Preview (First 20 Rows)</span>
+    </div>
+    
+    <div class="table-responsive">
+        {{ table|safe }}
+    </div>
+    
+    <div class="action-buttons">
+        <a href="{{ url_for('upload') }}" class="btn btn-warning">
+            <i class="fas fa-redo" aria-hidden="true"></i> Upload Different Dataset
+        </a>
+        
+        {% if current_step < total_steps %}
+            <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-next">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i> Proceed to Next Step
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if transformation_history %}
+<div class="card history-card">
+    <div class="card-title">
+        <i class="fas fa-history" aria-hidden="true"></i>
+        <span>Transformation History</span>
+    </div>
+    <div class="history-panel">
+        {% for item in transformation_history %}
+        <div class="history-item">
+            <div class="history-step">Step {{ item.step }}: {{ item.action }}</div>
+            <div class="history-details">{{ item.details }}</div>
+            <div class="history-timestamp">{{ item.timestamp }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if current_step == 1 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <span>Step 1: Data Inspection</span>
+    </div>
+    
+    <p>This step helps you understand your dataset structure, data types, and identify initial issues.</p>
+    
+    <div class="data-info-section">
+        <h3>Dataset Information</h3>
+        <div class="info-box">
+            <p><strong>Shape:</strong> {{ data_info.shape[0] }} rows × {{ data_info.shape[1] }} columns</p>
+            <p><strong>Columns and Data Types:</strong></p>
+            <ul class="column-list">
+                {% for col, dtype in data_info.dtypes.items() %}
+                    <li><strong>{{ col }}:</strong> {{ dtype }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <div class="data-info-section">
+        <h3>Missing Values Summary</h3>
+        <div class="info-box">
+            <ul class="column-list">
+                {% for col, count in data_info.null_counts.items() %}
+                    <li><strong>{{ col }}:</strong> {{ count }} missing</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <div class="data-info-section">
+        <h3>Unique Values Count</h3>
+        <div class="info-box">
+            <ul class="column-list">
+                {% for col, count in data_info.unique_counts.items() %}
+                    <li><strong>{{ col }}:</strong> {{ count }} unique values</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    {% if null_plot %}
+    <div class="plot-container">
+        <h3>Missing Values Heatmap</h3>
+        <img src="data:image/png;base64,{{ null_plot }}" alt="Missing Values Heatmap">
+    </div>
+    {% endif %}
+    
+    {% if dist_plot %}
+    <div class="plot-container">
+        <h3>Numeric Features Distribution</h3>
+        <img src="data:image/png;base64,{{ dist_plot }}" alt="Numeric Features Distribution">
+    </div>
+    {% endif %}
+    
+    {% if corr_plot %}
+    <div class="plot-container">
+        <h3>Correlation Heatmap</h3>
+        <img src="data:image/png;base64,{{ corr_plot }}" alt="Correlation Heatmap">
+    </div>
+    {% endif %}
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-complete">
+            <i class="fas fa-check" aria-hidden="true"></i> Complete Inspection
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if current_step == 2 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-broom" aria-hidden="true"></i>
+        <span>Step 2: Data Cleaning</span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+            <label><strong>Cleaning Method:</strong></label>
+            <select name="cleaning_method" class="form-control" required>
+                <option value="">Select cleaning method</option>
+                <option value="text_clean">Clean Text Data</option>
+                <option value="remove_duplicates">Remove Duplicates</option>
+                <option value="convert_types">Convert Data Types</option>
+            </select>
+        </div>
+        
+        <div id="text_clean_options" class="method-options" style="display: none;">
+            <div class="form-group">
+                <label>Columns to Clean:</label>
+                <select name="cleaning_columns" class="form-control" multiple>
+                    {% for col in data_info.categorical_cols %}
+                        <option value="{{ col }}">{{ col }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div id="convert_types_options" class="method-options" style="display: none;">
+            <div class="form-group">
+                <label>Type Conversions:</label>
+                <table class="type-conversion-table">
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Current Type</th>
+                            <th>Convert To</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for col, dtype in data_info.dtypes.items() %}
+                        <tr>
+                            <td>{{ col }}</td>
+                            <td>{{ dtype }}</td>
+                            <td>
+                                <select name="type_{{ col }}" class="form-control">
+                                    <option value="keep">Keep as is</option>
+                                    <option value="numeric">Numeric</option>
+                                    <option value="datetime">Datetime</option>
+                                    <option value="category">Category</option>
+                                    <option value="string">String</option>
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check" aria-hidden="true"></i> Apply Cleaning
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if current_step == 3 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-question-circle" aria-hidden="true"></i>
+        <span>Step 3: Handle Missing Values</span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+            <label><strong>Missing Value Handling Method:</strong></label>
+            <select name="missing_method" class="form-control" required>
+                <option value="">Select method</option>
+                <option value="mean">Mean Imputation</option>
+                <option value="median">Median Imputation</option>
+                <option value="mode">Mode Imputation</option>
+                <option value="knn">KNN Imputation</option>
+                <option value="drop">Drop Rows</option>
+                <option value="ffill">Forward Fill</option>
+                <option value="bfill">Backward Fill</option>
+                <option value="interpolate">Interpolate</option>
+                <option value="constant">Fill with Constant</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Columns to Process (leave blank for all columns with missing values):</label>
+            <select name="missing_columns" class="form-control" multiple>
+                {% for col, count in data_info.null_counts.items() %}
+                    {% if count > 0 %}
+                        <option value="{{ col }}">{{ col }} ({{ count }} missing)</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check" aria-hidden="true"></i> Handle Missing Values
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if current_step == 4 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+        <span>Step 4: Data Transformation</span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+            <label><strong>Transformation Method:</strong></label>
+            <select name="transform_method" class="form-control" required>
+                <option value="">Select transformation method</option>
+                <option value="standard">Standard Scaling</option>
+                <option value="minmax">Min-Max Scaling</option>
+                <option value="robust">Robust Scaling</option>
+                <option value="log">Log Transformation</option>
+                <option value="boxcox">Box-Cox Transformation</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Columns to Transform (leave blank for all numeric columns):</label>
+            <select name="transform_columns" class="form-control" multiple>
+                {% for col in data_info.numeric_cols %}
+                    <option value="{{ col }}">{{ col }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check" aria-hidden="true"></i> Apply Transformation
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if current_step == 5 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-code" aria-hidden="true"></i>
+        <span>Step 5: Categorical Encoding</span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+            <label><strong>Encoding Method:</strong></label>
+            <select name="encoding_method" class="form-control" required>
+                <option value="">Select encoding method</option>
+                <option value="label">Label Encoding</option>
+                <option value="onehot">One-Hot Encoding</option>
+                <option value="ordinal">Ordinal Encoding</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Columns to Encode (leave blank for all categorical columns):</label>
+            <select name="encoding_columns" class="form-control" multiple>
+                {% for col in data_info.categorical_cols %}
+                    <option value="{{ col }}">{{ col }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check" aria-hidden="true"></i> Apply Encoding
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if current_step == 6 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+        <span>Step 6: Outlier Handling</span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+            <label><strong>Outlier Handling Method:</strong></label>
+            <select name="outlier_method" class="form-control" required>
+                <option value="">Select method</option>
+                <option value="remove">Remove Outliers</option>
+                <option value="cap">Cap Outliers</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Columns to Process (leave blank for all numeric columns):</label>
+            <select name="outlier_columns" class="form-control" multiple>
+                {% for col in data_info.numeric_cols %}
+                    <option value="{{ col }}">{{ col }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check" aria-hidden="true"></i> Handle Outliers
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if current_step == 7 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-cogs" aria-hidden="true"></i>
+        <span>Step 7: Feature Engineering</span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+            <label><strong>Feature Engineering Methods:</strong></label>
+            <select name="fe_methods" class="form-control" multiple required>
+                <option value="datetime">Extract DateTime Features</option>
+                <option value="binning">Numeric Binning</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Columns for Binning (if selected):</label>
+            <select name="fe_columns" class="form-control" multiple>
+                {% for col in data_info.numeric_cols %}
+                    <option value="{{ col }}">{{ col }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check" aria-hidden="true"></i> Apply Feature Engineering
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if current_step == 8 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-compress-alt" aria-hidden="true"></i>
+        <span>Step 8: Dimensionality Reduction</span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+            <label><strong>Reduction Method:</strong></label>
+            <select name="dimred_method" class="form-control" required>
+                <option value="">Select method</option>
+                <option value="pca">Principal Component Analysis (PCA)</option>
+                <option value="selectkbest">SelectKBest</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Number of Components/Features:</label>
+            <input type="number" name="n_components" class="form-control" min="1" max="{{ data_info.numeric_cols|length }}" value="5" required>
+        </div>
+        
+        <div id="selectkbest_options" class="method-options" style="display: none;">
+            <div class="form-group">
+                <label>Target Column (for supervised methods):</label>
+                <select name="target_col" class="form-control">
+                    {% for col in data_info.categorical_cols %}
+                        <option value="{{ col }}">{{ col }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check" aria-hidden="true"></i> Apply Dimensionality Reduction
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if current_step == 9 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-tasks" aria-hidden="true"></i>
+        <span>Step 9: Final Type Conversion</span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+            <label><strong>Type Conversions:</strong></label>
+            <table class="type-conversion-table">
+                <thead>
+                    <tr>
+                        <th>Column</th>
+                        <th>Current Type</th>
+                        <th>Convert To</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for col, dtype in data_info.dtypes.items() %}
+                    <tr>
+                        <td>{{ col }}</td>
+                        <td>{{ dtype }}</td>
+                        <td>
+                            <select name="final_type_{{ col }}" class="form-control">
+                                <option value="keep">Keep as is</option>
+                                <option value="numeric">Numeric</option>
+                                <option value="datetime">Datetime</option>
+                                <option value="category">Category</option>
+                                <option value="boolean">Boolean</option>
+                            </select>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check" aria-hidden="true"></i> Apply Type Conversions
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if current_step == 10 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-check-circle" aria-hidden="true"></i>
+        <span>Step 10: Data Validation</span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="alert alert-info">
+            <p>This step will validate your dataset and check for common issues:</p>
+            <ul>
+                <li>Remaining missing values</li>
+                <li>Infinite values in numeric columns</li>
+                <li>Data type consistency</li>
+            </ul>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-check" aria-hidden="true"></i> Run Data Validation
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% if current_step == 11 %}
+<div class="card">
+    <div class="card-title">
+        <i class="fas fa-file-export" aria-hidden="true"></i>
+        <span>Step 11: Export Data</span>
+    </div>
+    
+    <form method="POST" action="{{ url_for('process', filename=filename, step=current_step) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+            <label><strong>Export Format:</strong></label>
+            <select name="export_format" class="form-control" required>
+                <option value="csv">CSV</option>
+                <option value="excel">Excel</option>
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-download" aria-hidden="true"></i> Export Processed Data
+        </button>
+    </form>
+</div>
+{% endif %}
+
+<style>
+    .table-responsive {
+        overflow-x: auto;
+        margin: 20px 0;
+    }
+    
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+    
+    .btn-next {
+        margin-left: auto;
+    }
+    
+    .data-info-section {
+        margin-bottom: 25px;
+    }
+    
+    .data-info-section h3 {
+        margin: 20px 0 10px;
+        color: var(--primary-color);
+    }
+    
+    .info-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .column-list {
+        column-count: 3;
+        column-gap: 20px;
+    }
+    
+    .column-list li {
+        margin-bottom: 8px;
+        break-inside: avoid;
+    }
+    
+    .history-card {
+        margin-top: 20px;
+    }
+    
+    .history-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .history-step {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    .history-details {
+        font-size: 14px;
+        color: #6c757d;
+        margin: 5px 0;
+    }
+    
+    .history-timestamp {
+        font-size: 12px;
+        color: #adb5bd;
+    }
+    
+    .btn-complete, .btn-primary {
+        margin-top: 20px;
+    }
+    
+    .btn-complete {
+        background: var(--success-color);
+    }
+    
+    .method-options {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .type-conversion-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .type-conversion-table th, .type-conversion-table td {
+        padding: 8px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .type-conversion-table th {
+        background-color: #f8f9fa;
+    }
+    
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+    
+    .alert-info {
+        background-color: #e7f5fe;
+        color: #0c5460;
+    }
+    
+    @media (max-width: 768px) {
+        .column-list {
+            column-count: 2;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .btn-next {
+            margin-left: 0;
+        }
+        
+        .type-conversion-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .column-list {
+            column-count: 1;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add responsive wrapper to tables
+        const table = document.querySelector('.data-table');
+        if (table) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-responsive';
+            table.parentNode.insertBefore(wrapper, table);
+            wrapper.appendChild(table);
+        }
+        
+        // Add loading state to forms
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function() {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Processing...';
+                }
+            });
+        });
+        
+        // Show/hide method options based on selection (for step 2)
+        const cleaningMethodSelect = document.querySelector('select[name="cleaning_method"]');
+        if (cleaningMethodSelect) {
+            cleaningMethodSelect.addEventListener('change', function() {
+                document.querySelectorAll('.method-options').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                if (this.value === 'text_clean') {
+                    document.getElementById('text_clean_options').style.display = 'block';
+                } else if (this.value === 'convert_types') {
+                    document.getElementById('convert_types_options').style.display = 'block';
+                }
+            });
+        }
+        
+        // Show/hide target column for SelectKBest (step 8)
+        const dimredMethodSelect = document.querySelector('select[name="dimred_method"]');
+        if (dimredMethodSelect) {
+            dimredMethodSelect.addEventListener('change', function() {
+                const selectkbestOptions = document.getElementById('selectkbest_options');
+                if (this.value === 'selectkbest') {
+                    selectkbestOptions.style.display = 'block';
+                } else {
+                    selectkbestOptions.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
